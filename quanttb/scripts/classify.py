@@ -11,7 +11,7 @@ import argparse
 from collections import Counter, OrderedDict
 from scipy import sparse
 from itertools import combinations
-import pkg_resources
+from pkg_resources import Requirement, resource_filename
 import logging
 from shutil import rmtree
 
@@ -19,10 +19,10 @@ from shutil import rmtree
 logger = logging.getLogger(__name__)
 
 #getting package data
-pkg_resources.resource_filename("quanttb", 'data/')
+resource_filename(Requirement.parse('quanttb'), 'quanttb/data/')
 
 
-ref = pkg_resources.resource_filename("quanttb", 'data/GCF_000277735.2_ASM27773v2_genomic.fna')
+ref = resource_filename(Requirement.parse('quanttb'), 'quanttb/data/GCF_000277735.2_ASM27773v2_genomic.fna')
 with open(ref, "r") as reffile:
 	refdata = reffile.read()
 refdata = "".join(refdata.split()[6:])
@@ -30,7 +30,7 @@ refdata = "0" + refdata
 
 # getting mutation dictionary for antibiotic resistance
 mutable = {}
-mutlist = pkg_resources.resource_filename("quanttb", 'data/snpmutlist.txt')
+mutlist = resource_filename(Requirement.parse('quanttb'), 'quanttb/data/snpmutlist.txt')
 with open(mutlist, 'rb') as f:
 	f.readline()
 	for line in f:
@@ -41,7 +41,7 @@ with open(mutlist, 'rb') as f:
 		else:
 			mutable[pos] = {'drug': snp[3],'alt':[snp[2] ]}
 
-ranges = pkg_resources.resource_filename("quanttb",'data/pegenes.tsv')
+ranges = resource_filename(Requirement.parse('quanttb'),'quanttb/data/pegenes.tsv')
 with open(ranges, 'r') as file:
 			ranges = file.read().split('\n')
 
@@ -983,7 +983,7 @@ def getvcf(fastas, tempdir = "temp", keepint = False):
 	getvcf = ""
 	
 	if not os.path.isfile(vcfloc):
-		pilon = "java -jar " + pkg_resources.resource_filename('quanttb', 'data/pilon-1.22.jar')
+		pilon = "java -jar " + resource_filename(Requirement.parse('quanttb'), 'quanttb/data/pilon-1.22.jar')
 
 		getvcf = pilon + " --genome " + ref + " --bam " + bamloc +  " --output " + name + " --outdir " + tempdir + " --vcf" + " --threads 4 --fix none"
 		if not os.path.isfile(bamloc):

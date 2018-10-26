@@ -3,12 +3,11 @@ import os
 import sys
 import argparse
 import logging
-import pkg_resources
+from  pkg_resources import Requirement, resource_filename
 #run nucmer
 
 
-ref = pkg_resources.resource_filename('quanttb', 'data/GCF_000277735.2_ASM27773v2_genomic.fna')
-#ref = "/tudelft.net/staff-bulk/ewi/insy/tbdiagnostics/aligner/index/GCF_000277735.2_ASM27773v2_genomic.fna"
+ref = resource_filename(Requirement.parse('quanttb'), 'quanttb/data/GCF_000277735.2_ASM27773v2_genomic.fna')
 
 def runnucmer(fastafile, outputfile):
 	if not os.path.isfile(fastafile):
@@ -71,7 +70,6 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-f', '--list', dest='filenames', nargs='+', help='<Required> Files you want to get compared to ref genome', required=True)
 	parser.add_argument('-o', dest = 'output', type = str, help = 'Directory where  you want results written to', default = '.')
-	#parser.add_argument('-amb', dest='ambig', nargs='+', help='Include ambiguous sites?')
 	parser.add_argument('-l', dest='log_level', help='Set the logging level',
                    choices=['DEBUG', 'ERROR', 'CRITICAL'], default = "INFO")
 	args = parser.parse_args()
