@@ -1,6 +1,7 @@
 from classify import *
 from runnucmer import *
 
+
 class SpecialFormatter(logging.Formatter):
 	FORMATS = {logging.DEBUG :"DBG: %(module)s: %(lineno)d: %(message)s",
 			   logging.ERROR : "ERROR: %(message)s",
@@ -31,12 +32,32 @@ def makeoutput(qtobj):
 		if not os.path.isdir(qtobj.temp):
 			os.makedirs(qtobj.temp)
 
+
+def getvcfs(fqlist, qtobj):
+	if which('samtools') is None or which('bwa') is None:
+		logging.error('To run this, both samtools (v 1.7 or higher) and bwa (v. 0.7.17 or higher) need to be installed in your system and in your path')
+		logging.info('samtools download: https://sourceforge.net/projects/samtools/files/samtools/1.7/' )
+		logging.info('BWA download: https://sourceforge.net/projects/bio-bwa/files/bwa-0.7.17.tar.bz2/download')
+		sys.exit()
+
+	sets = []
+	for fq in fqlist: #should check if samples are fq
+		if not all(os.path.isfile(readset) for readset in fq):
+			logging.error ("Some readsets don't exist:")
+			logging.info("\n".join ([readset for readset in fq if not os.path.isfile(readset)]))
+			continue
+		samplevcf = getvcf(fq, tempdir = qtobj.temp, keepint = qtobj.keepin)
+		sets.append(samplevcf)
+	return (sets)
+
 class QuantTBMain(object):
-	from classify import Snpdb, Snpset
+	#from classify import Snpdb, Snpset
+	
+	#print [x for x in sys.modules if 'classify' in x]
 
 	def __init__(self):
-		usage = '\r{}\nUsage: %(prog)s <command> [options]\nCommand: makesnpdb\t Make a reference SNP database\n\t quant\t\t Quantify sample with a ref SNP db\n\t makepileup\t Generate a pileup from sequencing readsets\n'.format(
-			'Program: QuantTB (Detection of mixed infections)\nVersion: 0.x\n'.ljust(len('usage:')))
+		usage = '\r{}\nUsage: %(prog)s <command> [options]\nCommand: makesnpdb\t Make a reference SNP database\n\t quant\t\t Quantify sample with a ref SNP db\n\t variants\t Generate a vcf from sequencing readsets\n'.format(
+			'Program: QuantTB (Detection of mixed infections)\nVersion: 0.01\n'.ljust(len('usage:')))
 
 		parser = argparse.ArgumentParser(
 			prog='QuantTB', usage=usage, add_help=False)
@@ -102,6 +123,9 @@ class QuantTBMain(object):
 			sys.exit()
 		if all([x.endswith(('.fna', '.fasta', '.fa')) for x in dbgenomes]):
 			logging.info('Running nucmer on ' + str(len(dbgenomes)) + ' fasta files to obtain SNPs relative to H37Rv reference')
+			if which('nucmer') is None or which('show-snps') is None:
+   				logging.error('To run this, Mummer(nucmer & show-snps) needs to be installed in your system and in your path')
+   				sys.exit
 			count = 0
 			newloc = []
 			for genome in dbgenomes:
@@ -119,15 +143,18 @@ class QuantTBMain(object):
 		db.save(self.out)
 		if not self.keepin:
 			rmtree(self.temp)
+	
 	def quant(self):
 		usage = '\r{}\nUsage: %(prog)s quant [options] <-db> <-s>\n'.format(
 			''.ljust(len('usage:')))
 		parser = argparse.ArgumentParser(
 			description='', usage=usage, add_help=False)
 
-		required = parser.add_argument_group('Required arguments')
-		required.add_argument('-s', dest='samples', nargs='+', help='Sample(s) or Snpsets that you want tested against the refdb, can either be .vcf(.gz) or .samp')
+		#required = parser.add_argument_group('Required arguments')
 		optional = parser.add_argument_group('Optional arguments')
+		optional.add_argument('-v', dest='vcfsamples', nargs='+', help='VCF(s) or snp profiles that you want tested against the refdb, can either be .vcf(.gz) or .samp')
+		optional.add_argument('-f', dest='fastq', nargs='+', action = 'append' ,
+		help='Fastq Readset(s) that you want tested against refdb, can specify multiple times for multiple pairs, (.fq, .fastq)')
 		optional.add_argument('-db', dest='db', help='Location of reference SNP DB file. (.db) If not supplied a default TB db will be used', type = str)
 		optional.add_argument('-o', dest = 'output', type = str, help = 'Directory/File where  you want results written to', default = 'output/results.txt')
 		optional.add_argument('-resout', dest = 'resprint', action = "store_true", help = 'Should stats from each run be output')
@@ -150,6 +177,12 @@ class QuantTBMain(object):
 		self.out = args.output
 		makeoutput(self)
 
+		if args.vcfsamples is None and args.fastq is None:
+			logging.error ("Must supply VCF or fastq samples to classiy")
+			sys.exit()
+		samples = args.vcfsamples
+
+
 		if args.keep:
 			self.keepin = True
 		else:
@@ -160,9 +193,17 @@ class QuantTBMain(object):
 			if os.path.isfile(abres):
 				os.remove(abres)
 
-		if not all(os.path.isfile(genome) for genome in args.samples):
+		if args.fastq is not None:
+			sets = getvcfs(args.fastq, self)
+			if samples is None:
+				samples = sets
+			else:
+				samples += sets
+
+
+		if not all(os.path.isfile(genome) for genome in samples):
 			logging.error ("Some sample files don't exist:")
-			logging.info("\n".join ([genome for genome in args.samples if not os.path.isfile(genome)]))
+			logging.info("\n".join ([genome for genome in samples if not os.path.isfile(genome)]))
 			sys.exit()
 
 		if not args.db:
@@ -180,9 +221,10 @@ class QuantTBMain(object):
 		logging.info("Using reference SNP db from " + self.db )
 		self.db = openFile(self.db)
 
+
 		samplenames = []
 
-		for sample in args.samples:
+		for sample in samples:
 			if sample.endswith((".samp",".pkl")):
 				logging.info("Using snps from " + sample )
 				samplesnps = openFile(sample)
@@ -201,9 +243,9 @@ class QuantTBMain(object):
 						num += 1
 					samplesnps.sample += '_' + str(num)
 
-
 				if self.keepin:
 					samplesnps.save(self.outdirr + "/" + samplesnps.sample)
+					print samplesnps
 				samplenames.append(samplesnps.sample)
 
 			if args.abres:
@@ -241,17 +283,17 @@ class QuantTBMain(object):
 			logging.info('Removing temporary files')
 			rmtree(self.temp)
 
-	def makepileup(self):
-		usage = '\r{}\nUsage: %(prog)s makepileup [options] <-f> \n'.format(
+	def variants(self):
+		usage = '\r{}\nUsage: %(prog)s variants [options] <-f> \n'.format(
 			''.ljust(len('usage:')))
 		parser = argparse.ArgumentParser(
 			description='', usage=usage, add_help=False)
 
 		required = parser.add_argument_group('Required arguments')
 		required.add_argument('-f', dest='fastq', nargs='+', action = 'append' ,
-		help='Fastq Readset(s) that you want converted to a VCF pileup, can specify multiple times for multiple pairs, (.fq, .fastq)')
+		help='Fastq Readset(s) that you want converted to a vcf (using samtools,bwa and pilon), can specify multiple times for multiple pairs, (.fq, .fastq)')
 		optional = parser.add_argument_group('Optional arguments')
-		optional.add_argument('-o', dest = 'output', type = str, help = 'Directory you want snpset/VCF written to', default = 'output/')
+		optional.add_argument('-o', dest = 'output', type = str, help = 'Directory you want vcf written to', default = 'output/')
 		optional.add_argument('-k', dest = 'keep', action = 'store_true', help = 'Keep temp files?')
 		optional.add_argument('-l', dest='log_level', help='Set the logging level',
                    choices=['DEBUG', 'ERROR', 'CRITICAL'], default = "INFO")
@@ -261,24 +303,19 @@ class QuantTBMain(object):
 
 		args = parser.parse_args(sys.argv[2:])
 
+		self.out = args.output
 
-		if args.fastas:
-			if which('samtools') is None or which('bwa') is None:
-				logging.error('To run this, both samtools (v 1.7 or higher) and bwa (v. 0.7.17 or higher) need to be installed in your system and in your path')
-				logging.info('samtools download: https://sourceforge.net/projects/samtools/files/samtools/1.7/' )
-				logging.info('BWA download: https://sourceforge.net/projects/bio-bwa/files/bwa-0.7.17.tar.bz2/download')
-				sys.exit()
+		makeoutput(self)
 
-			#pilonpath = os.path.abspath(os.path.join(sys.argv[0], '../../dependencies/pilon-1.22.jar'))
+		if args.keep:
+			self.keepin = True
+		else:
+			self.keepin = False
 
+		sets = getvcfs(args.fastq, self)
+		
+	
 
-			for fq in args.fastas: #should check if samples are fq
-				if not all(os.path.isfile(readset) for readset in fq):
-					logging.error ("Some readsets don't exist:")
-					logging.info("\n".join ([readset for readset in fq if not os.path.isfile(readset)]))
-					continue
-				samplevcf = getvcf(fq, tempdir = temp, keepint = keepin)
-			
 
 
 def main():

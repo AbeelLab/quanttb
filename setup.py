@@ -1,7 +1,5 @@
 from setuptools import setup, find_packages
-#import setuptools
 import sys
-#mport setuptools, sys
 if sys.version_info[0] > 2:
     raise "Invalid Python interpreter, must be 2.X"
 
@@ -10,10 +8,10 @@ setup(
     version='0.1dev',
     packages=find_packages(),
     description='Quantification of mixed TB infections',
-    license='Creative Commons Attribution-Noncommercial-Share Alike license',
-    long_description=open('README.txt').read(),
+    license='GNU GENERAL PUBLIC LICENSE',
+    long_description=open('README.md').read(),
     install_requires=[
-         'numpy', 'subprocess32','sklearn', 'scipy'      ],
+         'numpy==1.14.5', 'subprocess32==3.5.2', 'scipy==1.1.0'],
     package_dir={'quanttb': 'quanttb/'},
     package_data={'quanttb': ['data/*']},
     #include_package_data = True,

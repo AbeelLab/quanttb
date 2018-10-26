@@ -79,7 +79,8 @@ if __name__ == '__main__':
    		logging.getLogger().setLevel(getattr(logging, args.log_level))
 
    	if which('nucmer') is None or which('show-snps') is None:
-   		logging.error('To run this, Mummer(nucmer & show-snps) needs to be installed in your system and in your path')
+   		logging.error('To run this, Mummer(nucmer & show-snps) version 3.0 needs to be installed in your system and in your path')
+   		logging.info('http://mummer.sourceforge.net/')
    		sys.exit
 
 	if not all(os.path.isfile(genome) for genome in args.filenames):

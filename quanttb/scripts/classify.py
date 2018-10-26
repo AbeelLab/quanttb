@@ -18,26 +18,17 @@ from shutil import rmtree
 
 logger = logging.getLogger(__name__)
 
-#pkg = pkg_resources.Requirement.parse("quanttb")
+#getting package data
 pkg_resources.resource_filename("quanttb", 'data/')
 
-#pilon = "java -jar " + pkg_resources.resource_filename('quanttb', 'data/pilon-1.22.jar')
-#getting reference file
-#ref = "/tudelft.net/staff-bulk/ewi/insy/tbdiagnostics/aligner/index/GCF_000277735.2_ASM27773v2_genomic.fna"
-# with open(ref, "r") as reffile:
-# 	refdata = reffile.read()
 
-# refdata = "".join(refdata.split()[6:])
-# refdata = "0" + refdata
-# #refdict = dict(list(enumerate(refdata)))#
 ref = pkg_resources.resource_filename("quanttb", 'data/GCF_000277735.2_ASM27773v2_genomic.fna')
 with open(ref, "r") as reffile:
 	refdata = reffile.read()
-
 refdata = "".join(refdata.split()[6:])
 refdata = "0" + refdata
 
-## getting mutation dictionary for antibiotic resistance
+# getting mutation dictionary for antibiotic resistance
 mutable = {}
 mutlist = pkg_resources.resource_filename("quanttb", 'data/snpmutlist.txt')
 with open(mutlist, 'rb') as f:
@@ -49,17 +40,7 @@ with open(mutlist, 'rb') as f:
 			mutable[pos]['alt'].append(snp[2])
 		else:
 			mutable[pos] = {'drug': snp[3],'alt':[snp[2] ]}
-# mutable = {}
-# with open('/tudelft.net/staff-bulk/ewi/insy/tbdiagnostics/snpmutlist.txt', 'rb') as f:
-# 	f.readline()
-# 	for line in f:
-# 		snp = line.rstrip().split(',')
-# 		pos = int(snp[0])
-# 		if pos in mutable:
-# 			mutable[pos]['alt'].append(snp[2])
-# 		else:
-# 			mutable[pos] = {'drug': snp[3],'alt':[snp[2] ]}#
-#ranges = '/tudelft.net/staff-bulk/ewi/insy/tbdiagnostics/aligner/PEgenes.ranges'
+
 ranges = pkg_resources.resource_filename("quanttb",'data/pegenes.tsv')
 with open(ranges, 'r') as file:
 			ranges = file.read().split('\n')
@@ -71,10 +52,6 @@ lows = np.array([int(y[0]) for y in ranges])
 
 def in_range(x):
 	return np.any((lows <= x) & (x <= highs))
-
-
-# pilon = "java -jar /tudelft.net/staff-bulk/ewi/insy/DBL/canyansi/tools/pilon-1.22.jar"
-
 
 def openFile(filename):
 	if not os.path.isfile(filename):
@@ -367,8 +344,6 @@ def iteration(db, snpsampleset, iterationmax = 8, withref = True,  maxthresh = 0
 	If withref is true, it will ensure the H37rv reference is included in both the sample and the db'''
 
 
-	#if not isinstance(db, Snpdb):
-	#	raise Exception("Please submit a db object")
 	thedb = copy.deepcopy(db)
 	if withref:
 		if "H37rv" not in thedb.sampnames:
@@ -378,16 +353,11 @@ def iteration(db, snpsampleset, iterationmax = 8, withref = True,  maxthresh = 0
 		includeme = None
 		if "H37rv" in thedb.sampnames:
 			thedb.removeref("H37rv")
-	# if not isinstance(snpsampleset, Snpset):
-	# 	try:
-	# 		snpsampleset = Snpset(snpsampleset, hardfilter = False, include = includeme)
-	# 	except:
-	# 		raise Exception("Please submit a proper vcf sample set, or something that can be turned into samples et")
 
 	logging.info("Comparing " + snpsampleset.sample + " against " + str(len(db.sampnames))  + " in database")
 	thesample = copy.deepcopy(snpsampleset)
 	if thesample.posincluded is None and withref:
-		logging.info("The sample does not have reference bases included by default, may hamper results.")
+		logging.info("The sample does not have reference bases included by default")
 
 	strains = []
 	maxvalue = 1
@@ -412,33 +382,23 @@ def iteration(db, snpsampleset, iterationmax = 8, withref = True,  maxthresh = 0
 		sampcov += thesample.covtable[snp].values()
 		sampsnps += item
 	sampsnps = set(sampsnps)
-	#sampsnps = np.array(sampsnps, dtype = object)
 
 	sampfreqs = []
 	sampcovs = []
 	badpos = set(thesample.badpos)
-	#sampzero = []
 	for x,y in thedb.matcols:
-		# if x in badpos:
-		# 	sampfreqs.append(np.nan)
-		# 	sampcovs.append(np.nan)
 		if x in thesample.snptable:
 			if y in thesample.snptable[x]:
 				sampfreqs.append(thesample.snptable[x][y])
 				sampcovs.append(thesample.covtable[x][y])
-			#	sampzero.append(1)
 			else:
 				sampfreqs.append(0)
 				sampcovs.append(0)
-			#	sampzero.append(0)
 		else:
 			sampfreqs.append(np.nan)
 			sampcovs.append(np.nan)
-			#sampzero.append(0)
 	sampfreqs = np.array(sampfreqs)
 	sampcovs = np.array(sampcovs)
-	#sampzero = np.array(sampzero)
-	# sys.stderr.write( "linmodel\n")
 
 	#subsetting db to only places that have in common with the sample
 	knownlocs = np.where(~np.isnan(sampcovs))[0]
@@ -591,7 +551,6 @@ def iteration(db, snpsampleset, iterationmax = 8, withref = True,  maxthresh = 0
 
 			
 			#removing snps from this strain from sample
-			#identified bad positions, identified amcov, identified SNPs
 			sampfreqs_known[thisit_idsnps] = np.maximum(sampfreqs_known[thisit_idsnps] - amcov[ind[0]] , 0)
 	
 			thisit_remsnps = thisit_idsnps[(sampfreqs_known[thisit_idsnps] * covlist[thisit_idsnps] < sampcovs_known[thisit_idsnps])]  
@@ -1024,6 +983,8 @@ def getvcf(fastas, tempdir = "temp", keepint = False):
 	getvcf = ""
 	
 	if not os.path.isfile(vcfloc):
+		pilon = "java -jar " + pkg_resources.resource_filename('quanttb', 'data/pilon-1.22.jar')
+
 		getvcf = pilon + " --genome " + ref + " --bam " + bamloc +  " --output " + name + " --outdir " + tempdir + " --vcf" + " --threads 4 --fix none"
 		if not os.path.isfile(bamloc):
 			aln = "bwa mem -t 4 " + ref + " " + fastq +  " | samtools sort - -T sam_tempsort" + name + " > " + bamloc
