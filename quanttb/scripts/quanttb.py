@@ -207,7 +207,7 @@ class QuantTBMain(object):
 			sys.exit()
 
 		if not args.db:
-			self.db = pkg_resources.resource_filename('quanttb', 'data/snpdb_100snpdist.db')
+			self.db = resource_filename(Requirement.parse('quanttb'), 'quanttb/data/snpdb_100snpdist.db')
 		else:
 			self.db = args.db
 			if not os.path.isfile(self.db):
@@ -218,7 +218,7 @@ class QuantTBMain(object):
 				logging.info('Snpdb needs to be a db file (.db)')
 				sys.exit()
 
-		logging.info("Using reference SNP db from " + self.db )
+		logging.info("Using reference SNP db from " + os.path.basename(self.db) )
 		self.db = openFile(self.db)
 
 

@@ -19,7 +19,7 @@ from shutil import rmtree
 logger = logging.getLogger(__name__)
 
 #getting package data
-resource_filename(Requirement.parse('quanttb'), 'quanttb/data/')
+resource_filename(Requirement.parse('quanttb'), 'quanttb/data')
 
 
 ref = resource_filename(Requirement.parse('quanttb'), 'quanttb/data/GCF_000277735.2_ASM27773v2_genomic.fna')
@@ -631,11 +631,11 @@ def iteration(db, snpsampleset, iterationmax = 8, withref = True,  maxthresh = 0
 
 	row1= ["refname" , "totscore",  "samplescore" , "commonpcnt" , "finalrel",  "finalcov", "amcov", "amdepth" ]
 	row_format ="{:>15}" * (len(row1) + 1)
-	print row_format.format("", *row1)
+	logging.info(row_format.format("", *row1))
 
 	for idd in strains:
-		print row_format.format("", *[idd.sample , str(round(idd.totscore, 3)) , str(round(idd.samplescore, 3)) , 
-			str(round(idd.percentcommon , 3))		 , str(round(idd.finalrel, 3)) , str(round(idd.finalcov, 3)), str(round(idd.amcov, 3)), str(round(idd.amdepth, 3))])
+		logging.info( row_format.format("", *[idd.sample , str(round(idd.totscore, 3)) , str(round(idd.samplescore, 3)) , 
+			str(round(idd.percentcommon , 3))		 , str(round(idd.finalrel, 3)) , str(round(idd.finalcov, 3)), str(round(idd.amcov, 3)), str(round(idd.amdepth, 3))]))
 
 	return [strains, thedb, thesample, iterationres]
 

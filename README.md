@@ -17,6 +17,8 @@ Some functionalities of QuantTB require additional software to be installed on y
     * samtools download: https://sourceforge.net/projects/samtools/files/samtools/1.7/
     * BWA download: https://sourceforge.net/projects/bio-bwa/files/bwa-0.7.17.tar.bz2/download
 
+
+
 ### Installing
 
 Download the latest release  of QuantTB from https://github.com/AbeelLab/quanttb/releases and install it on your computing environment.
@@ -24,7 +26,7 @@ Download the latest release  of QuantTB from https://github.com/AbeelLab/quanttb
 ```
 tar -zxvf quanttb-1.0.0.tar.gz
 cd quanttb-1.0.0
-python setup.py install
+sudo python setup.py install
 
 ```
 
@@ -86,7 +88,15 @@ quanttb quant -v sample1snps.vcf sample2snps.vcf sample3snps.vcf -abres
 Antibiotic resistance results for all samples are output in a separate file, 'antibioticresistances.txt'. 
 
 #### Getting variants
+To use this functionality correct versions of bwa and samtools need to be installed and on the file path.
 
+```
+wget https://github.com/samtools/samtools/releases/download/1.7/samtools-1.7.tar.bz2 -O - | tar xj ; ( cd samtools-1.7 ; make )
+export PATH=/full/path/to/samtools-1.7:${PATH}
+
+wget https://github.com/lh3/bwa/releases/download/v0.7.17/bwa-0.7.17.tar.bz2 -O - | tar xj ; ( cd bwa-0.7.17 ; make )
+export PATH=/full/path/to/bwa-0.7.17:${PATH}
+```
 Fastq readsets need to be converted to a VCF file in order to be classified or be used as a reference genome in the database. This can optionally be done with the quanttb command: variants. The variants command accepts paired or single end fastq files as input. For multiple samples, the '-f' argument can be used repeatedly
 
 ```
