@@ -2,6 +2,7 @@ from __future__ import division #floating point division automatic
 import os
 import gzip
 import numpy as np
+import warnings
 import cPickle as pickle
 import copy
 import sys
@@ -381,7 +382,8 @@ def iteration(db, snpsampleset, iterationmax = 8, withref = True,  maxthresh = 0
 		sampfreq += d.values()
 		sampcov += thesample.covtable[snp].values()
 		sampsnps += item
-	sampsnps = set(sampsnps)
+	#sampsnps = set(sampsnps)
+	samppos = [x[0] for x in sampsnps]
 
 	sampfreqs = []
 	sampcovs = []
@@ -432,14 +434,15 @@ def iteration(db, snpsampleset, iterationmax = 8, withref = True,  maxthresh = 0
 	if scov > 25:
 		maxthresh = 0.2
 
-	#calculating current coverage of database in sample
+	#calculating current coverage of database in sample excluding purely reference locations
 	refdictsnps = set(thesample.refdict.items())
-	tog=set(map(tuple, thisit_cols)) & sampsnps - refdictsnps
+	if 'H37rv' in thedb.matrows:
+		refdictsnps -= set(thedb.sample('H37rv').snptable.items())
+	tog=set(map(tuple, thisit_cols)) & set(sampsnps) - refdictsnps
 	ins=[x in tog for x in sampsnps]
-	freqin = np.array(sampfreq)[ins]
-	freqin = freqin[freqin != 0].mean()
 	covin = np.array(sampcov)[ins]
 	covin = covin[covin != 0].mean()
+	logging.debug('The starting covin is ' + str(covin))
 
 	#saving results
 	iterationres['0'] = [thisit_cols, thisit_refs , thisit_mat, sampfreqs_known]	
@@ -458,7 +461,7 @@ def iteration(db, snpsampleset, iterationmax = 8, withref = True,  maxthresh = 0
 		sampscore[np.where(fullpos < 16)] = 0 
 
 
-		logging.debug('sample average cov: ', str(scov),  'covthresh ' + str(covthresh))
+		logging.debug('sample average cov: ' +  str(scov) +   ' covthresh ' + str(covthresh))
 		
 		#for the calculation of percent overlap, only considering SNPs that pass vcoverage threshold
 		allowed = (np.where((sampfreqs_known > 0.05)  & (sampcovs_known > covthresh) )[0]) 
@@ -485,45 +488,51 @@ def iteration(db, snpsampleset, iterationmax = 8, withref = True,  maxthresh = 0
 
 		ind = np.argsort(totscore)[::-1][0:5] # top five score indices
 
-		topten, topten_totscore, topten_sampscore, topten_pcntc = [x[ind] for x in [thisit_refs, totscore, sampscore, pcntc]]
+		topfive, topfive_totscore, topfive_sampscore, topfive_pcntc = [x[ind] for x in [thisit_refs, totscore, sampscore, pcntc]]
 
-		logging.debug(topten, topten_totscore)
+		logging.debug(topfive)
+		logging.debug(topfive_totscore)
+		identified = topfive[0]
 
-		identified = topten[0]
-
-		maxvalue = topten_totscore[0]	
+		maxvalue = topfive_totscore[0]	
 
 		#checking whether the identified strain passes secondary check of it's coverage significatly influencing the total coverage of SNPs in the database to the sample
 		#if it doesnt, check whether anyhing else in the top 5 does. This removes spuriously identified strains
 		changelist =OrderedDict()
 		for poss in ind:
 			query = set(map(tuple, thisit_cols[~thisit_mat[np.where(thisit_refs == thisit_refs[poss])[0]][0]]))
-			tog=(query & sampsnps) - refdictsnps
+			if thisit_refs[poss] == 'H37rv':
+				query = set([x for x in query if x[0] not in thedb.sample('H37rv').snptable.keys()])
+			tog=(query & set(sampsnps)) - refdictsnps
 			ins=[x in tog for x in sampsnps]
 			ncovin = np.array(sampcov)[ins]
 			ncovin = ncovin[ncovin != 0].mean()
 			changelist[poss] = ncovin
-			logging.debug(thisit_refs[poss], ncovin)
+			logging.debug(thisit_refs[poss] + ' ' +  str(ncovin))
 
 		change=(covin-changelist[ind[0]])/covin
 
-		logging.debug(change)
+		logging.debug('change ' + str(change))
 
 		if change < .015 and scov > 10 :
 			for poss in changelist:
 				change=(covin-changelist[poss])/covin
 				if change > .015:
-					logging.debug(identified + ' has been changed to ' + thisit_refs[poss] + ' with change of ',  str(change), 'and ncovin of ', str(changelist[poss]))
+					logging.debug(identified + ' has been changed to ' + thisit_refs[poss] + ' with change of ' +   str(change) +  ' and ncovin of ' +  str(changelist[poss]))
+					#print identified + ' has been changed to ' + thisit_refs[poss] + ' with change of ' +   str(change) +  ' and ncovin of ' +  str(changelist[poss])
 					ind[0] = poss
 					identified = thisit_refs[poss]
 					changed = True
-					topten, topten_totscore, topten_sampscore, topten_pcntc = [x[ind] for x in [thisit_refs, totscore, sampscore, pcntc]]
-					maxvalue = topten_totscore[0]	
+					topfive, topfive_totscore, topfive_sampscore, topfive_pcntc = [x[ind] for x in [thisit_refs, totscore, sampscore, pcntc]]
+					maxvalue = topfive_totscore[0]
+					ncovin = changelist[poss]	
 					break
 				else:
 					changed = False
 			if changed == False:
 				maxvalue = 0
+		else:
+			ncovin = changelist[ind[0]]
 
 
 		iterations += 1
@@ -557,8 +566,9 @@ def iteration(db, snpsampleset, iterationmax = 8, withref = True,  maxthresh = 0
 			thisit_remsnps = np.append(thisit_remsnps, thisit_idsnps[(sampfreqs_known[thisit_idsnps] < .05)])
 			thisit_remsnps = np.unique(thisit_remsnps)
 
-			logging.debug('removed snps from sample :'  , str(len(thisit_remsnps)), 'snps in id strain: ', str(len(thisit_idsnps)))
+			logging.debug('removed snps from sample :'   +  str(len(thisit_remsnps)) +  ' snps in id strain: ' +  str(len(thisit_idsnps)))
 			
+
 			sampfreqs_known[thisit_remsnps] = np.nan
 
 	
@@ -586,27 +596,13 @@ def iteration(db, snpsampleset, iterationmax = 8, withref = True,  maxthresh = 0
 			#getting the snp counts of only the genomes that will be evaluated
 			snpcounts = thedb.matrix.sum(axis = 1) 
 
-
-			refdictsnps = set(thesample.refdict.items())
-			tog=(set(map(tuple, thisit_cols)) & sampsnps) - refdictsnps
-
-			ins=[x in tog for x in sampsnps]
-
-			freqin = np.array(sampfreq)[ins]
-			freqin = freqin[freqin != 0].mean()
-			ncovin = np.array(sampcov)[ins]
-			ncovin = ncovin[ncovin != 0].mean()
-
-			change=(covin-ncovin)/covin
-			logging.debug(identified.sample, change, ncovin)
-			if change < 0.015 and scov > 10: #applying additional filter for high coverage samples
-				maxvalue = 0
-			else:
-				logging.debug(identified.sample +  ' totscore: ' + str(topten_totscore[0]) +  'amcov: ' + str(identified.amcov) +  ' snpcounts: ' + str(identified.snpcounts) +  ' samepos: ' + str(identified.samepos)+  ' fullpos: ' + str(identified.fullpos))
-				strains.append(identified)
+			logging.debug(identified.sample +  ' totscore: ' + str(topfive_totscore[0]) +  'amcov: ' + str(identified.amcov) +  ' snpcounts: ' + str(identified.snpcounts) +  ' samepos: ' + str(identified.samepos)+  ' fullpos: ' + str(identified.fullpos))
+			strains.append(identified)
 
 			covin = ncovin
 			iterationres[str(iterations)] = [thisit_cols, thisit_refs , thisit_mat, sampfreqs_known, covlist]
+			if covin == 0:
+				maxvalue = 0
 
 		iterationres[str(iterations)] = [thisit_cols, thisit_refs , thisit_mat, sampfreqs_known, covlist]
 

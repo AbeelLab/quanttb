@@ -24,8 +24,8 @@ Some functionalities of QuantTB require additional software to be installed on y
 Download the latest release  of QuantTB from https://github.com/AbeelLab/quanttb/releases and install it on your computing environment.
 
 ```
-tar -zxvf quanttb-1.0.0.tar.gz
-cd quanttb-1.0.0
+tar -zxvf quanttb-1.0.tar.gz
+cd quanttb-1.0
 sudo python setup.py install
 
 ```
@@ -34,8 +34,35 @@ QuantTB should now be installed.
 
 ## Running QuantTB
 
-QuantTB can be used to make SNP databases, obtain snp profiles from fastq readsets, and classify strains.
+QuantTB can be used to classify strains, make a SNP databases, and obtain snp profiles from fastq readsets.
 
+#### Quantifying individual strains in a sample
+
+To classify strains in a sample using a reference genome, the command 'quant' is used. Quanttb accepts a list of fastq files (-f argument), and  vcf files (pilon), or .samp files  (-v argument) as input. In addition a reference snp database (.db) needs to be used (-db flag). QuantTB comes prepackaged with a database of 2166 TB genomes that differ by at least 100 snps. This is used as a default if no reference SNP database is supplied. QuantTB classifies strains using an iterative approach. The max number of iterations by default is set to 8, but this can be changed with the '-i' flag. 
+
+```
+# Classify a sample with default database and save results to output/results.txt
+quanttb quant -f readset1.fq readset2.fq -o 'output/myresults.txt'
+
+```
+A result file containing the references observed in the sample is output to the specified location (default is output/results.txt). The output looks like the table below for a sample containing two strains. Every row in the output denotes the presence of a specific reference snp profile for the corresponding sample. The relative abundances are noted in the column 'relabundance' column.
+
+|sample |refname| totscore  |relabundance | depth  |
+|---    |---    |---    |---    |---    |
+|readset1| UT0106    |   0.577    |    0.699   |  5.472     |
+| readset1      |  I0003367-5     |    0.437   | 0.301      | 2.358      |
+
+
+
+
+QuantTB can optionally find antibiotic resistant variants in the sample using a list of predetermined resistant mutations. Mutations in positions coding for antibiotic resistance can be output with the flag 'abres'
+
+```
+# Classify a sample with manually made database, and output antibiotic resistance results
+quanttb quant -v sample1snps.vcf sample2snps.vcf sample3snps.vcf -db newdb.db -abres
+
+```
+Antibiotic resistance results for all samples are output in a separate file, 'antibioticresistances.txt'. 
 
 
 #### Making a SNP database
@@ -49,43 +76,15 @@ quanttb makesnpdb -g genome1.vcf genome2.vcf genome3.vcf ....
 # From fna files. MUMmer must be installed on system
 quanttb makesnpdb -g genome1.fna genome2.fna genome3.fna ....
 ```
-Optionally, during construction of the snp database, quanttb can filter the snps and filter the genomes present to increase classification accuracy. SNPs can be filtered to remove those that are within a certain range of each other per genome using the 'reddist' argument. The default is 25. The database can be filtered to remove references that are within a certain genetic distance from each other using the 'filterdist' argument. By default there is no filtering of genomes.
+Optionally, during construction of the snp database, quanttb can filter the snps and filter the genomes present to increase classification accuracy. SNPs can be filtered to remove those that are within a certain range of each other per genome using the 'reddist' argument. The default is 25. 
 
 ```
-# Removes snps from each genome that are within 50 snps from each other, and 
-# removes references that differ by less than 100 snps 
-quanttb makesnpdb -reddist 50 -filtedist 100 -g genome1.fna genome2.fna genome3.fna ....
+# Makes database and removes snps from each genome that are within 50 snps from each other
+quanttb makesnpdb -reddist 50 -g genome1.fna genome2.fna genome3.fna ....
 ```
 
 A snpdb is output with the '.db' suffix which can be used in the 'quant' command to classify strains within a sample.
 
-#### Quantifying individual strains in a sample
-
-To classify strains in a sample using a reference genome, the command 'quant' is used. Quanttb accepts a list of fastq files (-f argument), and  vcf files (pilon), or .samp files  (-v argument) as input. In addition a reference snp database (.snpdb) needs to be used. QuantTB comes prepackaged with a database of 2166 TB genomes that differ by at least 100 snps. This is used as a default if no reference SNP database is supplied. QuantTB classifies strains using an iterative approach. The max number of iterations by default is set to 8, but this can be changed with the '-i' flag. 
-
-```
-# Classify a sample with default database and save results to output/results.txt
-quanttb quant -f readset1.fq readset2.fq -o 'output/myresults.txt'
-
-```
-A result file containing the references observed in the sample is output to the specified location (default is output/results.txt). The output looks like the table below for a sample containing two strains. Every row in the output denotes the presence of a specific reference snp profile for the corresponding sample. The relative abundances are noted in the column 'relabundance' column.
-
-|sample |refname|score  |relabundance | depth  |
-|---    |---    |---    |---    |---    |
-|readset1| tb_stainA    |   0.6    |    0.67   |  5.4     |
-| readset1      |  strainB_tb     |    0.5   | 0.33      | 2.65      |
-
-
-
-
-QuantTB can optionally find antibiotic resistant variants in the sample using a list of predetermined resistant mutations. Mutations in positions coding for antibiotic resistance can be output with the flag 'abres'
-
-```
-# Classify a sample with manually made database, and output antibiotic resistance results
-quanttb quant -v sample1snps.vcf sample2snps.vcf sample3snps.vcf -abres
-
-```
-Antibiotic resistance results for all samples are output in a separate file, 'antibioticresistances.txt'. 
 
 #### Getting variants
 To use this functionality correct versions of bwa and samtools need to be installed and on the file path.
@@ -109,7 +108,58 @@ quanttb variants -f sample_1.fq sample_2.fq  -f sample2_1.fq sample2_2.fq
 ```
 This outputs a VCF file which can be used as input in snpdb or the quant command. 
 
+## Full list of command line arguments
+```
+Usage: quantTB <command> [options]
 
+Command: makesnpdb       Make a reference SNP database
+         quant           Quantify sample with a ref SNP db
+         variants        Generate a vcf from sequencing readsets
+
+
+Usage: quanttb quant [options] <-db> <-s>
+
+Optional arguments:
+  -v [VCFSAMPLES ...]
+                        VCF(s) or snp profiles that you want tested against
+                        the refdb, can either be .vcf(.gz) or .samp
+  -f [FASTQ ...]  Fastq Readset(s) that you want tested against refdb,
+                        can specify multiple times for multiple pairs, (.fq,
+                        .fastq)
+  -db DB                Location of reference SNP DB file. (.db) If not
+                        supplied a default TB db will be used
+  -o OUTPUT             Directory/File where you want results written to
+  -resout               Should stats from each run be output?
+  -i               Number of iterations for classificaiton
+  -abres                Should resistances from each sample be output?
+  -k                    Keep temp files?
+
+Usage: quanttb makesnpdb [options] <-g>
+
+Required arguments:
+  -g [DBFILES ...]
+                        Files you want to use to make the reference database,
+                        Can be either .fa, .fna, .fasta, .snps .vcf(.gz), or
+                        .samp
+
+Optional arguments:
+  -reducedist     When making database, what is the minimum distance
+                        between SNPs in a genome
+  -o OUTPUT             Directory/File where you want the snpdb to be written
+                        to
+  -k                    Keep temp files?
+
+Usage: quanttb variants [options] <-f>
+
+Required arguments:
+  -f FASTQ [FASTQ ...]  Fastq Readset(s) that you want converted to a vcf
+                        (using samtools,bwa and pilon), can specify multiple
+                        times for multiple pairs, (.fq, .fastq)
+
+Optional arguments:
+  -o OUTPUT             Directory you want vcf written to
+  -k                    Keep temp files?
+```
 ## License
 
 This project is licensed under the GNU GENERAL PUBLIC LICENSE- see the [LICENSE](LICENSE) file for details

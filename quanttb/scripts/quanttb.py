@@ -53,14 +53,13 @@ def getvcfs(fqlist, qtobj):
 class QuantTBMain(object):
 	#from classify import Snpdb, Snpset
 	
-	#print [x for x in sys.modules if 'classify' in x]
 
 	def __init__(self):
 		usage = '\r{}\nUsage: %(prog)s <command> [options]\nCommand: makesnpdb\t Make a reference SNP database\n\t quant\t\t Quantify sample with a ref SNP db\n\t variants\t Generate a vcf from sequencing readsets\n'.format(
 			'Program: QuantTB (Detection of mixed infections)\nVersion: 0.01\n'.ljust(len('usage:')))
 
 		parser = argparse.ArgumentParser(
-			prog='QuantTB', usage=usage, add_help=False)
+			prog='quantTB', usage=usage, add_help=False)
 
 		parser.add_argument('command', help='Subcommand to run')
 
@@ -91,7 +90,7 @@ class QuantTBMain(object):
 	
 		optional = parser.add_argument_group('Optional arguments')
 		optional.add_argument('-reducedist', dest = 'redist', type = int, help = 'When making database, what is the minimum distance between SNPs in a genome', default = 25)
-		optional.add_argument('-filterdist', dest = 'filterdist', type = int, help = 'When making database, what is the minimum distance between SNPs?', default = None)
+		#optional.add_argument('-filterdist', dest = 'filterdist', type = int, help = 'When making database, what is the minimum distance between SNPs?', default = None)
 		optional.add_argument('-o', dest = 'output', type = str, help = 'Directory/File where  you want the snpdb to be written to', default = 'output/snpdb')
 
 		optional.add_argument('-k', dest = 'keep', action = 'store_true', help = 'Keep temp files?')
@@ -139,7 +138,7 @@ class QuantTBMain(object):
 				os.remove(outname + ".delta")
 			dbgenomes = newloc
 		logging.info("Making reference db out of " + str(len(dbgenomes)) + " ref genomes, saving in " + self.out + '.db')
-		db = Snpdb(dbgenomes, reducedist = args.redist, filterdist = args.filterdist)
+		db = Snpdb(dbgenomes, reducedist = args.redist)
 		db.save(self.out)
 		if not self.keepin:
 			rmtree(self.temp)
@@ -245,7 +244,6 @@ class QuantTBMain(object):
 
 				if self.keepin:
 					samplesnps.save(self.outdirr + "/" + samplesnps.sample)
-					print samplesnps
 				samplenames.append(samplesnps.sample)
 
 			if args.abres:
@@ -260,16 +258,17 @@ class QuantTBMain(object):
 			logging.info('Starting iterations')
 			res = iteration(self.db, samplesnps, iterationmax = args.iters)
 
-
-			if args.resprint:
-				header = "sample, refname, totscore, samplescore, commonpcnt, relabundance, depth, amcov, amdepth,  fullpositions, samepos, snpcounts\n"
+			if not os.path.isfile(self.out):
+				if args.resprint:
+					header = "sample, refname, totscore, samplescore, commonpcnt, relabundance, depth, amcov, amdepth,  fullpositions, samepos, snpcounts\n"
+				else:
+					header = "sample, refname, totscore, relabundance, depth\n"
 			else:
-				header = "sample, refname, totscore, relabundance, depth\n"
+				header = None
 
 
 			with open(self.out, "ab") as outputfile:
-				if not os.path.isfile(self.out):
-					outputfile.write(header)
+				if header: outputfile.write(header)
 				if res[0] is not None:
 					for idd in res[0]:
 						if args.resprint:
@@ -280,7 +279,7 @@ class QuantTBMain(object):
 							outputfile.write(",".join([samplesnps.sample, idd.sample , str(round(idd.totscore, 3)) ,str(round(idd.finalrel, 3)), str(round(idd.finalcov, 3))])  + "\n")
 	
 		if not self.keepin and os.path.isdir(self.temp):
-			logging.info('Removing temporary files')
+			logging.debug('Removing temporary files')
 			rmtree(self.temp)
 
 	def variants(self):
