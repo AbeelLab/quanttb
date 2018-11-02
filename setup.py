@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import sys
 if sys.version_info[0] > 2:
-    raise "Invalid Python interpreter, must be 2.X"
+    raise Exception( "Invalid Python interpreter, must be 2.X")
 
 setup(
     name='quanttb',

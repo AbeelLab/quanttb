@@ -56,7 +56,7 @@ class QuantTBMain(object):
 
 	def __init__(self):
 		usage = '\r{}\nUsage: %(prog)s <command> [options]\nCommand: makesnpdb\t Make a reference SNP database\n\t quant\t\t Quantify sample with a ref SNP db\n\t variants\t Generate a vcf from sequencing readsets\n'.format(
-			'Program: QuantTB (Detection of mixed infections)\nVersion: 0.01\n'.ljust(len('usage:')))
+			'Program: QuantTB (Detection of mixed infections)\nVersion: 1.01\n'.ljust(len('usage:')))
 
 		parser = argparse.ArgumentParser(
 			prog='quantTB', usage=usage, add_help=False)
@@ -245,6 +245,9 @@ class QuantTBMain(object):
 				if self.keepin:
 					samplesnps.save(self.outdirr + "/" + samplesnps.sample)
 				samplenames.append(samplesnps.sample)
+			else:
+				logging.error('Improper file type')
+				sys.exit()
 
 			if args.abres:
 				samplesnps.findres()
