@@ -23,8 +23,8 @@ Some functionalities of QuantTB require additional software to be installed on y
 Download the latest release  of QuantTB from https://github.com/AbeelLab/quanttb/releases and install it on your computing environment.
 
 ```
-tar -zxvf quanttb-1.0.tar.gz
-cd quanttb-1.0
+tar -zxvf quanttb-1.01.tar.gz
+cd quanttb-1.01
 sudo python setup.py install
 
 ```
