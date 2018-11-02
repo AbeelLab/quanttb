@@ -4,8 +4,7 @@ QuantTB is a SNP based method to identify and quantify individual strains presen
 
 ## Getting Started
 
-
-These instructions will guide you through the process of using QuantTB, so that you can deploy it on your own local system. 
+These instructions will guide you through the process of using QuantTB, so that you can deploy it on your own local system. Tested to work for Mac OSX and Ubuntu. 
 
 ### Prerequisites
 Python 2.x needs to be installed on your system to run QuantTB. (https://www.python.org/downloads/) Alternatively python can be installed using a package manager such as miniconda (https://conda.io/miniconda.html).  
