@@ -50,7 +50,7 @@ sudo python setup.py install
 
 ```
 
-QuantTB should now be installed.
+QuantTB should now be installed. If things do not appear to be working, there is a log file present in the temp directory of the output folder which may help you diagnose problems.
 
 ## Running QuantTB
 
