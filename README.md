@@ -14,7 +14,13 @@ sudo apt install python
 sudo apt install python-setuptools
 sudo apt install python-dev
 ```
+A recent version of Java is needed
 
+```
+sudo add-apt-repository ppa:linuxuprising/java
+sudo apt update
+sudo apt install oracle-java11-installer
+```
 
 Some functionalities of QuantTB require additional software to be installed on your system. 
 
