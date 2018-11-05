@@ -83,10 +83,16 @@ quanttb quant -f exdata/readset1.fq exdata/readset2.fq -o output2/myresults.txt 
 ```
 Antibiotic resistance results for all samples are output in a separate file, 'antibioticresistances.txt'. 
 
+QuantTB can also work directly from pre-computed VCF files, one example is included
+```
+gunzip exdata/sample1scnps.vcf
+quanttb quant -v sample1snps.vcf -o output3/myresults.txt
+```
+
 
 QuantTB can also work directly from pre-computed VCF files and use user-defined databases (see below).
 ```
-quanttb quant -v sample1snps.vcf sample2snps.vcf sample3snps.vcf -db newdb.db
+quanttb quant -v sample1snps.vcf sample2snps.vcf sample3snps.vcf -db newdb.db -o someoutput/myresults.txt
 ```
 
 
