@@ -26,7 +26,8 @@ Some functionalities of QuantTB require additional software to be installed on y
 sudo apt install samtools
 ```
    
-    * BWA download: https://sourceforge.net/projects/bio-bwa/files/bwa-0.7.17.tar.bz2/download
+   * BWA download: https://sourceforge.net/projects/bio-bwa/files/bwa-0.7.17.tar.bz2/download
+   
 ```
 sudo apt install bwa
 ```
