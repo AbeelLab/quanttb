@@ -40,8 +40,8 @@ QuantTB can be used to classify strains, make a SNP databases, and obtain snp pr
 To classify strains in a sample using a reference genome, the command 'quant' is used. Quanttb accepts a list of fastq files (-f argument), and  vcf files (pilon), or .samp files  (-v argument) as input. In addition a reference snp database (.db) needs to be used (-db flag). QuantTB comes prepackaged with a database of 2166 TB genomes that differ by at least 100 snps. This is used as a default if no reference SNP database is supplied. QuantTB classifies strains using an iterative approach. The max number of iterations by default is set to 8, but this can be changed with the '-i' flag. 
 
 ```
-# Classify a sample with default database and save results to output/results.txt
-quanttb quant -f readset1.fq readset2.fq -o 'output/myresults.txt'
+# Classify a sample from the example data with the default database and save results to results.txt
+quanttb quant -f exdata/readset1.fq exdata/readset2.fq -o myresults.txt
 
 ```
 A result file containing the references observed in the sample is output to the specified location (default is output/results.txt). The output looks like the table below for a sample containing two strains. Every row in the output denotes the presence of a specific reference snp profile for the corresponding sample. The relative abundances are noted in the column 'relabundance' column.
