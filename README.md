@@ -62,7 +62,7 @@ To classify strains in a sample using a reference genome, the command 'quant' is
 
 ```
 # Classify a sample from the example data with the default database and save results to results.txt
-quanttb quant -f exdata/readset1.fq exdata/readset2.fq -o myresults.txt
+quanttb quant -f exdata/readset1.fq exdata/readset2.fq -o output1/myresults.txt
 
 ```
 A result file containing the references observed in the sample is output to the specified location (default is output/results.txt). The output looks like the table below for a sample containing two strains. Every row in the output denotes the presence of a specific reference snp profile for the corresponding sample. The relative abundances are noted in the column 'relabundance' column.
@@ -79,10 +79,15 @@ QuantTB can optionally find antibiotic resistant variants in the sample using a 
 
 ```
 # Classify a sample with manually made database, and output antibiotic resistance results
-quanttb quant -v sample1snps.vcf sample2snps.vcf sample3snps.vcf -db newdb.db -abres
-
+quanttb quant -f exdata/readset1.fq exdata/readset2.fq -o output2/myresults.txt -abres
 ```
 Antibiotic resistance results for all samples are output in a separate file, 'antibioticresistances.txt'. 
+
+
+QuantTB can also work directly from pre-computed VCF files and use user-defined databases (see below).
+```
+quanttb quant -v sample1snps.vcf sample2snps.vcf sample3snps.vcf -db newdb.db
+```
 
 
 #### Making a SNP database
