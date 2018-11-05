@@ -7,15 +7,29 @@ QuantTB is a SNP based method to identify and quantify individual strains presen
 These instructions will guide you through the process of using QuantTB, so that you can deploy it on your own local system. Tested to work for Mac OSX and Ubuntu. 
 
 ### Prerequisites
-Python 2.x needs to be installed on your system to run QuantTB. (https://www.python.org/downloads/) Alternatively python can be installed using a package manager such as miniconda (https://conda.io/miniconda.html).  
+Python 2.x with development and setup packages needs to be installed on your system to run QuantTB. (https://www.python.org/downloads/) Alternatively python can be installed using a package manager such as miniconda (https://conda.io/miniconda.html).  
+
+```
+sudo apt install python
+sudo apt install python-setuptools
+sudo apt install python-dev
+```
+
 
 Some functionalities of QuantTB require additional software to be installed on your system. 
 
 * If wanting to make a reference SNP database based on assembly genomes (.fna/.fa files) MUMmer v3 is required: http://mummer.sourceforge.net/ 
 * If wanting to generate a SNP profile for a fastq readset (.fq/.fastq files), samtools (v 1.7 or higher) and bwa (v. 0.7.17 or higher) need to be installed in your system and in your path. 
     * samtools download: https://sourceforge.net/projects/samtools/files/samtools/1.7/
-    * BWA download: https://sourceforge.net/projects/bio-bwa/files/bwa-0.7.17.tar.bz2/download
 
+```
+sudo apt install samtools
+```
+   
+    * BWA download: https://sourceforge.net/projects/bio-bwa/files/bwa-0.7.17.tar.bz2/download
+```
+sudo apt install bwa
+```
 
 
 ### Installing
