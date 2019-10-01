@@ -1,0 +1,13 @@
+*
+!*.*
+!*/
+
+build/*
+*.o
+*.so
+*.txt
+*.ap
+*.pyc
+*.png
+.DS_Store
+*.egg*
