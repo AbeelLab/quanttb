@@ -7,15 +7,36 @@ QuantTB is a SNP based method to identify and quantify individual strains presen
 These instructions will guide you through the process of using QuantTB, so that you can deploy it on your own local system. Tested to work for Mac OSX and Ubuntu. 
 
 ### Prerequisites
-Python 2.x needs to be installed on your system to run QuantTB. (https://www.python.org/downloads/) Alternatively python can be installed using a package manager such as miniconda (https://conda.io/miniconda.html).  
+Python 2.x with development and setup packages needs to be installed on your system to run QuantTB. (https://www.python.org/downloads/) Alternatively python can be installed using a package manager such as miniconda (https://conda.io/miniconda.html).  
+
+```
+sudo apt install python
+sudo apt install python-setuptools
+sudo apt install python-dev
+```
+A recent version of Java is needed
+
+```
+sudo add-apt-repository ppa:linuxuprising/java
+sudo apt update
+sudo apt install oracle-java11-installer
+```
 
 Some functionalities of QuantTB require additional software to be installed on your system. 
 
 * If wanting to make a reference SNP database based on assembly genomes (.fna/.fa files) MUMmer v3 is required: http://mummer.sourceforge.net/ 
 * If wanting to generate a SNP profile for a fastq readset (.fq/.fastq files), samtools (v 1.7 or higher) and bwa (v. 0.7.17 or higher) need to be installed in your system and in your path. 
     * samtools download: https://sourceforge.net/projects/samtools/files/samtools/1.7/
-    * BWA download: https://sourceforge.net/projects/bio-bwa/files/bwa-0.7.17.tar.bz2/download
 
+```
+sudo apt install samtools
+```
+   
+   * BWA download: https://sourceforge.net/projects/bio-bwa/files/bwa-0.7.17.tar.bz2/download
+   
+```
+sudo apt install bwa
+```
 
 
 ### Installing
@@ -29,7 +50,7 @@ sudo python setup.py install
 
 ```
 
-QuantTB should now be installed.
+QuantTB should now be installed. If things do not appear to be working, there is a log file present in the temp directory of the output folder which may help you diagnose problems.
 
 ## Running QuantTB
 
@@ -40,8 +61,8 @@ QuantTB can be used to classify strains, make a SNP databases, and obtain snp pr
 To classify strains in a sample using a reference genome, the command 'quant' is used. Quanttb accepts a list of fastq files (-f argument), and  vcf files (pilon), or .samp files  (-v argument) as input. In addition a reference snp database (.db) needs to be used (-db flag). QuantTB comes prepackaged with a database of 2166 TB genomes that differ by at least 100 snps. This is used as a default if no reference SNP database is supplied. QuantTB classifies strains using an iterative approach. The max number of iterations by default is set to 8, but this can be changed with the '-i' flag. 
 
 ```
-# Classify a sample with default database and save results to output/results.txt
-quanttb quant -f readset1.fq readset2.fq -o 'output/myresults.txt'
+# Classify a sample from the example data with the default database and save results to results.txt
+quanttb quant -f exdata/readset1.fq exdata/readset2.fq -o output1/myresults.txt
 
 ```
 A result file containing the references observed in the sample is output to the specified location (default is output/results.txt). The output looks like the table below for a sample containing two strains. Every row in the output denotes the presence of a specific reference snp profile for the corresponding sample. The relative abundances are noted in the column 'relabundance' column.
@@ -58,10 +79,21 @@ QuantTB can optionally find antibiotic resistant variants in the sample using a 
 
 ```
 # Classify a sample with manually made database, and output antibiotic resistance results
-quanttb quant -v sample1snps.vcf sample2snps.vcf sample3snps.vcf -db newdb.db -abres
-
+quanttb quant -f exdata/readset1.fq exdata/readset2.fq -o output2/myresults.txt -abres
 ```
 Antibiotic resistance results for all samples are output in a separate file, 'antibioticresistances.txt'. 
+
+QuantTB can also work directly from pre-computed VCF files, one example is included
+```
+gunzip exdata/sample1scnps.vcf
+quanttb quant -v sample1snps.vcf -o output3/myresults.txt
+```
+
+
+QuantTB can also work directly from pre-computed VCF files and use user-defined databases (see below).
+```
+quanttb quant -v sample1snps.vcf sample2snps.vcf sample3snps.vcf -db newdb.db -o someoutput/myresults.txt
+```
 
 
 #### Making a SNP database
