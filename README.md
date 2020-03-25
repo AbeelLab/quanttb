@@ -127,7 +127,7 @@ export PATH=/full/path/to/samtools-1.7:${PATH}
 wget https://github.com/lh3/bwa/releases/download/v0.7.17/bwa-0.7.17.tar.bz2 -O - | tar xj ; ( cd bwa-0.7.17 ; make )
 export PATH=/full/path/to/bwa-0.7.17:${PATH}
 ```
-Fastq readsets need to be converted to a VCF file in order to be classified or be used as a reference genome in the database. This can optionally be done with the quanttb command: variants. The variants command accepts paired or single end fastq files as input. For multiple samples, the '-f' argument can be used repeatedly
+Fastq readsets need to be converted to a VCF file in order to be classified or be used as a reference genome in the database. This can optionally be done with the quanttb command: variants. The variants command accepts paired or single end fastq files as input. Reads are variant called against the H37rv genome (Genbank: CP003248.2).  For multiple samples, the '-f' argument can be used repeatedly
 
 ```
 # For one paired end readset
