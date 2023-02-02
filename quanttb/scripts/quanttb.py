@@ -32,12 +32,12 @@ def makeoutput(qtobj):
 
     qtobj.temp = qtobj.outdirr + "/temp"
     try:
-        os.mkdirs(qtobj.temp)
+        os.makedirs(qtobj.temp)
     except OSError as e:
         if e.errno == errno.EEXIST and os.path.isdir(qtobj.temp):
             pass
-    else:
-        raise
+        else:
+            raise
 
 def getvcfs(fqlist, qtobj):
     if which('samtools') is None or which('bwa') is None:
