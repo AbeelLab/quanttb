@@ -11,7 +11,7 @@ setup(
     license='GNU GENERAL PUBLIC LICENSE',
     long_description=open('README.md').read(),
     install_requires=[
-         'numpy==1.14.5', 'subprocess32==3.5.2', 'scipy==1.1.0'],
+         'numpy==1.14.5', 'subprocess32==3.5.2', 'scipy==1.10.0'],
     package_dir={'quanttb': 'quanttb'},
     package_data={'quanttb': ['data/*']},
     #include_package_data = True,
